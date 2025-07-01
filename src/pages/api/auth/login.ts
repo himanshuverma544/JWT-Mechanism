@@ -7,7 +7,6 @@ import { signAccessToken, signRefreshToken } from '@/pages/api/auth/utils/index'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method !== 'POST') {
-    console.log('Method not allowed:', req.method);
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
