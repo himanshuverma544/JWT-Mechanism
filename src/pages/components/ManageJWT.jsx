@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 
 
@@ -14,6 +14,8 @@ export default function Home() {
   const [tokens, setTokens] = useState(null);
 
   const [result, setResult] = useState('');
+
+  const bottomRef = useRef(null);
 
 
   const populateFields = () => {
@@ -33,6 +35,8 @@ export default function Home() {
 
     const data = await res.json();
     setResult(JSON.stringify(data));
+
+    scrollToBottom();
   }
 
 
@@ -42,6 +46,8 @@ export default function Home() {
     const data = await res.json();
 
     setResult(JSON.stringify(data));
+
+    scrollToBottom();
   }
 
 
@@ -51,6 +57,8 @@ export default function Home() {
     const data = await res.json();
 
     setResult(JSON.stringify(data));
+
+    scrollToBottom();
   }
 
 
@@ -71,6 +79,8 @@ export default function Home() {
       }
       
       setResult(cookies || 'No cookies found.');
+
+      scrollToBottom();
     }
 
     const xhrAttack = async () => {
@@ -87,7 +97,9 @@ export default function Home() {
       }
 
       const data = await res.json();
-      setResult(JSON.stringify(data)); 
+      setResult(JSON.stringify(data));
+      
+      scrollToBottom(); 
     }
 
     return { xssAttack, xhrAttack };
@@ -120,6 +132,13 @@ export default function Home() {
     setTokens(null);
 
     setResult('Reset Successfully.');
+
+    scrollToBottom();
+  }
+
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
 
@@ -213,7 +232,10 @@ export default function Home() {
         </div>
       </div>
 
-      <pre className='result w-full max-w-[40rem] text-center whitespace-pre-wrap break-words px-5 py-3'>
+      <pre
+        ref={bottomRef}
+        className='result w-full max-w-[40rem] text-center whitespace-pre-wrap break-words px-5 py-3'
+      >
         {result}
       </pre>
     </div>
