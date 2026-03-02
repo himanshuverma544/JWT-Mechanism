@@ -12,8 +12,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { email, password, useHttpCookie } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
   // Dummy auth check
-  if (email === 'admin@bimapay.com' && password === '12345678') {
+  if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
 
     const user = { id: 1, email };
 

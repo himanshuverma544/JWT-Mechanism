@@ -6,6 +6,10 @@ import { signAccessToken, verifyToken } from '@/pages/api/auth/utils/index';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
   const { useHttpCookie } = req.body;
   
   const refreshToken = getCookie('refresh_token', { req, res });
