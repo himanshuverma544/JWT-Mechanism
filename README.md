@@ -24,6 +24,16 @@ An XHR-based attack uses JavaScript (XMLHttpRequest or fetch) to send authentica
 
 ---
 
+### What is HTTP-Cookie?
+
+An HTTP cookie is a small piece of data stored by the browser and automatically sent to the server with every request to the same domain. It is created by the server using the Set-Cookie HTTP header.
+
+When a cookie has the HttpOnly flag:
+- JavaScript cannot access it
+- Protects against XSS token theft
+
+Without HttpOnly, it becomes a normal client-accessible cookie.
+
 ### Conclusion
 
 Storing JWT in `localStorage` or `cookie` is vulnerable to client-side attacks. Using HTTP-only cookies prevents JavaScript from accessing the token, significantly improving security.
