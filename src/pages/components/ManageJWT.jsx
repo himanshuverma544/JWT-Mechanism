@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react';
 
 
-
 export default function Home() {
 
   const [email, setEmail] = useState('');
@@ -20,21 +19,41 @@ export default function Home() {
 
   const populateFields = () => {
 
-    setEmail('admin@bimapay.com');
-    setPassword('12345678');
+    setEmail(process.env.NEXT_PUBLIC_DEMO_EMAIL || '');
+    setPassword(process.env.NEXT_PUBLIC_DEMO_PASSWORD || '');
   }
 
 
   const login = async () => {
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, useHttpCookie })
-    });
+    if (!email || !password) {
+      setResult('Email and password are required');
+      scrollToBottom();
+      return;
+    }
 
-    const data = await res.json();
-    setResult(JSON.stringify(data));
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, useHttpCookie })
+      });
+
+      setShow(JSON.stringify(res, null, 2));
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Login failed' }));
+        console.log('ERROR DATA:', data);
+        setResult(JSON.stringify(data));
+        scrollToBottom();
+        return;
+      }
+
+      const data = await res.json();
+      setResult(JSON.stringify(data));
+    } catch (error) {
+      setResult(`Error: ${error.message || 'Failed to login'}`);
+    }
 
     scrollToBottom();
   }
@@ -42,10 +61,22 @@ export default function Home() {
 
   const accessProtected = async () => {
 
-    const res = await fetch('/api/auth/protected');
-    const data = await res.json();
+    try {
+      const res = await fetch('/api/auth/protected');
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Access denied' }));
+        setResult(JSON.stringify(data));
+        scrollToBottom();
+        return;
+      }
+      
+      const data = await res.json();
 
-    setResult(JSON.stringify(data));
+      setResult(JSON.stringify(data));
+    } catch (error) {
+      setResult(`Error: ${error.message || 'Failed to access protected route'}`);
+    }
 
     scrollToBottom();
   }
@@ -53,10 +84,26 @@ export default function Home() {
 
   const refresh = async () => {
 
-    const res = await fetch('/api/auth/refresh');
-    const data = await res.json();
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useHttpCookie })
+      });
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Refresh failed' }));
+        setResult(JSON.stringify(data));
+        scrollToBottom();
+        return;
+      }
+      
+      const data = await res.json();
 
-    setResult(JSON.stringify(data));
+      setResult(JSON.stringify(data));
+    } catch (error) {
+      setResult(`Error: ${error.message || 'Failed to refresh token'}`);
+    }
 
     scrollToBottom();
   }
@@ -85,19 +132,23 @@ export default function Home() {
 
     const xhrAttack = async () => {
 
-      const res = await fetch('/api/auth/protected', {
-        headers: {
-          Cookie: 'token=...'
+      try {
+        const res = await fetch('/api/auth/protected', {
+          headers: {
+            Cookie: 'token=...'
+          }
+        });
+
+        if (!res.ok) {
+          setResult('Failed to access protected route');
+          return;
         }
-      });
 
-      if (!res.ok) {
-        setResult('Failed to access protected route');
-        return;
+        const data = await res.json();
+        setResult(JSON.stringify(data));
+      } catch (error) {
+        setResult(`Error: ${error.message || 'XHR attack failed'}`);
       }
-
-      const data = await res.json();
-      setResult(JSON.stringify(data));
       
       scrollToBottom(); 
     }
@@ -108,7 +159,7 @@ export default function Home() {
   const { xssAttack, xhrAttack } = attacks();
 
 
-  const resetAll = () => {
+  const resetAll = async () => {
 
     const clearCookies = async () => {
 
@@ -120,11 +171,15 @@ export default function Home() {
         });
       }
       else {
-        await fetch('/api/auth/logout');
+        try {
+          await fetch('/api/auth/logout');
+        } catch (error) {
+          // Silently fail - cookies are already cleared client-side
+        }
       }
     }
 
-    clearCookies();
+    await clearCookies();
 
     setEmail('');
     setPassword('');
@@ -141,15 +196,20 @@ export default function Home() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    login();
+  }
+
 
   return (
     <div className="homepage flex flex-col items-center justify-center gap-16 min-h-screen p-4">
-
+      
       <h1 className="heading text-center text-3xl sm:text-4xl md:text-5xl ">
         JWT Mechanism
       </h1>
 
-      <form className="auth-form flex flex-col items-center justify-center gap-5">
+      <form className="auth-form flex flex-col items-center justify-center gap-5" onSubmit={handleSubmit}>
         <div className="input-group flex flex-col gap-0.5">
           <label htmlFor="email">Email</label>
           <input
@@ -158,7 +218,7 @@ export default function Home() {
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder="e.g. admin@bimapay.com"
+            placeholder={`use: ${process.env.NEXT_PUBLIC_DEMO_EMAIL || ''}`}
           />
         </div>
         <div className="input-group flex flex-col gap-0.5">
@@ -168,7 +228,7 @@ export default function Home() {
             className="password-input px-3 py-2 border rounded bg-transparent"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            placeholder="e.g. 12345678"
+            placeholder={`use: ${process.env.NEXT_PUBLIC_DEMO_PASSWORD || ''}`}
             type="password"
           />
         </div>
