@@ -17,10 +17,10 @@ export function getRequiredCookies(): string {
 
 export async function clearCookies(): Promise<void> {
 
-  const TUNNEL_COOKIES = [
+  const TUNNEL_COOKIES = [                   // Skipping GitHub Codespaces Cookies
     '.Tunnels.Relay.WebForwarding.Cookies',
     'tunnel_phishing_protection'
-  ];
+  ]; 
 
   const tunnelSet = new Set(TUNNEL_COOKIES);
 
