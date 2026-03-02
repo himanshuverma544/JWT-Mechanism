@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { getRequiredCookies, clearCookies, scrollToBottom } from '@/utils/functions';
+
 
 
 export default function Home() {
@@ -10,11 +12,12 @@ export default function Home() {
   
   const [useHttpCookie, setUseHttpCookie] = useState(false);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [tokens, setTokens] = useState(null);
 
   const [result, setResult] = useState('');
 
-  const bottomRef = useRef(null);
 
 
   const populateFields = () => {
@@ -39,7 +42,7 @@ export default function Home() {
         body: JSON.stringify({ email, password, useHttpCookie })
       });
 
-      setShow(JSON.stringify(res, null, 2));
+      setResult(JSON.stringify(res, null, 2));
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Login failed' }));
@@ -51,11 +54,18 @@ export default function Home() {
 
       const data = await res.json();
       setResult(JSON.stringify(data));
-    } catch (error) {
+      setIsLoggedIn(data?.success);
+    }
+    catch (error) {
       setResult(`Error: ${error.message || 'Failed to login'}`);
     }
 
     scrollToBottom();
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    login();
   }
 
 
@@ -74,7 +84,8 @@ export default function Home() {
       const data = await res.json();
 
       setResult(JSON.stringify(data));
-    } catch (error) {
+    }
+    catch (error) {
       setResult(`Error: ${error.message || 'Failed to access protected route'}`);
     }
 
@@ -101,7 +112,8 @@ export default function Home() {
       const data = await res.json();
 
       setResult(JSON.stringify(data));
-    } catch (error) {
+    }
+    catch (error) {
       setResult(`Error: ${error.message || 'Failed to refresh token'}`);
     }
 
@@ -113,19 +125,23 @@ export default function Home() {
 
     const xssAttack = () => {
 
-      const cookies = document.cookie.split('; ').join('\n\n') || "";
+      const cookies = getRequiredCookies();
 
       if (cookies) {
+        const accessToken =
+          cookies.match(/token=([^;]+)/)?.[1] || null;
 
-        const accessToken = cookies.match(/token=([^;\n]+)/)?.[1] || null;
-        const refreshToken = cookies.match(/refresh_token=([^;\n]+)/)?.[1] || null;
-        
+        const refreshToken =
+          cookies.match(/refresh_token=([^;]+)/)?.[1] || null;
+
         if (accessToken || refreshToken) {
           setTokens({ accessToken, refreshToken });
         }
       }
-      
-      setResult(cookies || 'No cookies found.');
+
+      setResult(
+        cookies ? cookies.split('; ').join('\n\n') : 'No cookies found.'
+      );
 
       scrollToBottom();
     }
@@ -134,9 +150,7 @@ export default function Home() {
 
       try {
         const res = await fetch('/api/auth/protected', {
-          headers: {
-            Cookie: 'token=...'
-          }
+          credentials: 'include'
         });
 
         if (!res.ok) {
@@ -146,11 +160,12 @@ export default function Home() {
 
         const data = await res.json();
         setResult(JSON.stringify(data));
-      } catch (error) {
-        setResult(`Error: ${error.message || 'XHR attack failed'}`);
       }
-      
-      scrollToBottom(); 
+      catch (error) {
+        setResult(`Error: ${error?.message || 'XHR attack failed'}`);
+      }
+
+      scrollToBottom();
     }
 
     return { xssAttack, xhrAttack };
@@ -159,25 +174,7 @@ export default function Home() {
   const { xssAttack, xhrAttack } = attacks();
 
 
-  const resetAll = async () => {
-
-    const clearCookies = async () => {
-
-      if (document.cookie) {
-
-        document.cookie.split(";").forEach(cookie => {
-          const name = cookie.split("=")[0].trim();
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-        });
-      }
-      else {
-        try {
-          await fetch('/api/auth/logout');
-        } catch (error) {
-          // Silently fail - cookies are already cleared client-side
-        }
-      }
-    }
+  const resetAll = async ({ displayMessage = true } = {}) => {
 
     await clearCookies();
 
@@ -186,30 +183,31 @@ export default function Home() {
     setUseHttpCookie(false);
     setTokens(null);
 
-    setResult('Reset Successfully.');
+    setIsLoggedIn(false);
+
+    if (displayMessage) {
+      setResult('Reset Successfully.');
+    }
 
     scrollToBottom();
   }
 
-
-  const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    login();
-  }
+  useEffect(() => {
+    resetAll({ displayMessage: false });
+  }, []);
 
 
   return (
     <div className="homepage flex flex-col items-center justify-center gap-16 min-h-screen p-4">
       
-      <h1 className="heading text-center text-3xl sm:text-4xl md:text-5xl ">
+      <h1 className="heading text-center text-3xl sm:text-4xl md:text-5xl">
         JWT Mechanism
       </h1>
 
-      <form className="auth-form flex flex-col items-center justify-center gap-5" onSubmit={handleSubmit}>
+      <form
+        className="auth-form flex flex-col items-center justify-center gap-5"
+        onSubmit={handleSubmit}
+      >
         <div className="input-group flex flex-col gap-0.5">
           <label htmlFor="email">Email</label>
           <input
@@ -235,54 +233,64 @@ export default function Home() {
       </form>
       
       <div className="actions-btns-groups flex flex-col flex-wrap justify-around gap-5">
-        <div className="group-1 flex flex-wrap justify-evenly gap-5 ">
-          <button
-            className="populate-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
-            onClick={populateFields}
-          >
-            Populate Fields
-          </button>
-          <button
-            className="login-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
-            onClick={login}
-          >
-            Login
-          </button>
-        </div>
+        {!isLoggedIn &&
+          <div className="group-1 flex flex-wrap justify-evenly gap-5 ">
+            <button
+              className="populate-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
+              onClick={populateFields}
+            >
+              Populate Fields
+            </button>
 
-        <div className="group-2 flex flex-wrap justify-evenly gap-5">
-          <button
-            className="get-protected-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer" onClick={accessProtected}
-          >
-            Access Protected
-          </button>
-          <button
-            className="refresh-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
-            onClick={refresh}
-          >
-            Refresh Token
-          </button>
-        </div>
+            <label className="http-cookie-toggle-label w-[14rem] flex items-center gap-3 border px-5 py-1 rounded select-none hover:cursor-pointer">
+              <input
+                id="http-cookie-toggle"
+                className="http-cookie-toggle-btn size-4 border px-5 py-1 rounded hover:cursor-pointer accent-black"
+                type="checkbox"
+                checked={useHttpCookie}
+                onChange={() => setUseHttpCookie(!useHttpCookie)}
+              />
+              Enable HTTP Cookie
+            </label>
+          </div>
+        }
+
+        {isLoggedIn &&
+          <div className="group-2 flex flex-wrap justify-evenly gap-5">
+            <button
+              className="get-protected-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
+              onClick={accessProtected}
+            >
+              Access Protected
+            </button>
+            <button
+              className="refresh-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
+              onClick={refresh}
+            >
+              Refresh Token
+            </button>  
+          </div>
+        }
 
         <div className="group-3 flex flex-wrap justify-evenly gap-5">
-          <label className="http-cookie-toggle-label w-[14rem] flex items-center gap-3 border px-5 py-1 rounded select-none hover:cursor-pointer">
-            <input
-              id="http-cookie-toggle"
-              className="http-cookie-toggle-btn size-4 border px-5 py-1 rounded hover:cursor-pointer accent-black"
-              type="checkbox"
-              checked={useHttpCookie}
-              onChange={() => setUseHttpCookie(!useHttpCookie)}
-            />
-            Enable HTTP Cookie
-          </label>
-          <button
-            className={`${!tokens?.accessToken ? "XSS" : "XHR"}-attack-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer`}
-            onClick={!tokens?.accessToken ? xssAttack : xhrAttack}
-          >
-            {!tokens?.accessToken ? "Do XSS Attack" : "Do XHR Attack"} 
-          </button>
-        </div>
-        <div className="group-4 flex flex-wrap justify-evenly gap-5">
+          {isLoggedIn &&
+            <button
+              className={`${!tokens?.accessToken ? "XSS" : "XHR"}-attack-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer`}
+              onClick={!tokens?.accessToken ? xssAttack : xhrAttack}
+            >
+              {!tokens?.accessToken ? "Do XSS Attack" : "Do XHR Attack"}
+            </button>
+          }
+
+          {!isLoggedIn &&
+            <button
+              className="login-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
+              onClick={login}
+            >
+              Login
+            </button>
+          }
+
           <button
             className="reset-all-btn w-[14rem] border px-5 py-1 rounded hover:cursor-pointer"
             onClick={resetAll}
@@ -293,8 +301,8 @@ export default function Home() {
       </div>
 
       <pre
-        ref={bottomRef}
-        className='result w-full max-w-[40rem] text-center whitespace-pre-wrap break-words px-5 py-3'
+        id="result"
+        className="result w-full max-w-[40rem] text-center whitespace-pre-wrap break-words px-5 py-3"
       >
         {result}
       </pre>
