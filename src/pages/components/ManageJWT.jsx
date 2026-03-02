@@ -131,20 +131,28 @@ export default function Home() {
       </h1>
 
       <form className="auth-form flex flex-col items-center justify-center gap-5">
-        <input
-          className="email-input px-3 py-2 border rounded bg-transparent"
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="Email"
-        />
-        <input
-          className="password-input px-3 py-2 border rounded bg-transparent"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          placeholder="Password"
-          type="password"
-        />
+        <div className="input-group flex flex-col gap-0.5">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            className="email-input px-3 py-2 border rounded bg-transparent"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="e.g. admin@bimapay.com"
+          />
+        </div>
+        <div className="input-group flex flex-col gap-0.5">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            className="password-input px-3 py-2 border rounded bg-transparent"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="e.g. 12345678"
+            type="password"
+          />
+        </div>
       </form>
       
       <div className="actions-btns-groups flex flex-col flex-wrap justify-around gap-5">
