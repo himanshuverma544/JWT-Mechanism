@@ -1,8 +1,8 @@
 # Why This Exists?
 
-• This project demonstrates why storing JWT tokens outside of **HTTP-only cookies** is insecure.
-• It shows how authentication becomes vulnerable to **XSS** and **XHR-based token theft** when tokens are stored in places like `localStorage` or `cookie`.
-• I have intentionally added specific test buttons in the UI so users can simulate the attack scenarios and clearly understand how token leakage happens.
+- This project demonstrates why storing JWT tokens outside of **HTTP-only cookies** is insecure.
+- It shows how authentication becomes vulnerable to **XSS** and **XHR-based token theft** when tokens are stored in places like `localStorage` or `cookie`.
+- I have intentionally added specific test buttons in the UI so users can simulate the attack scenarios and clearly understand how token leakage happens.
 
 ---
 
