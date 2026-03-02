@@ -25,7 +25,7 @@ export default function Home() {
 
   const login = async () => {
 
-    const res = await fetch('/src/pages/api/auth/login', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, useHttpCookie })
@@ -38,7 +38,7 @@ export default function Home() {
 
   const accessProtected = async () => {
 
-    const res = await fetch('/src/pages/api/auth/protected');
+    const res = await fetch('/api/auth/protected');
     const data = await res.json();
 
     setResult(JSON.stringify(data));
@@ -47,7 +47,7 @@ export default function Home() {
 
   const refresh = async () => {
 
-    const res = await fetch('/src/pages/api/auth/refresh');
+    const res = await fetch('/api/auth/refresh');
     const data = await res.json();
 
     setResult(JSON.stringify(data));
@@ -108,7 +108,7 @@ export default function Home() {
         });
       }
       else {
-        await fetch('/src/pages/api/auth/logout');
+        await fetch('/api/auth/logout');
       }
     }
 
