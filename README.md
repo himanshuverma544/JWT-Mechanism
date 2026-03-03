@@ -1,3 +1,6 @@
+### Preview
+<img src="public/assets/demo.gif" width="600"/>
+
 ### Why This Exists?
 
 - This project demonstrates why storing JWT tokens outside of **HTTP-only cookies** is insecure.
