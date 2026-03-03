@@ -34,6 +34,8 @@ When a cookie has the HttpOnly flag:
 
 Without HttpOnly, it becomes a normal client-accessible cookie.
 
+---
+
 ### Conclusion
 
 Storing JWT in `localStorage` or `cookie` is vulnerable to client-side attacks. Using HTTP-only cookies prevents JavaScript from accessing the token, significantly improving security.
