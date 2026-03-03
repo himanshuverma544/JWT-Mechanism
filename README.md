@@ -1,3 +1,6 @@
+### Preview
+<img src="/assets/demo.gif" width="600"/>
+
 ### Why This Exists?
 
 - This project demonstrates why storing JWT tokens outside of **HTTP-only cookies** is insecure.
@@ -21,6 +24,18 @@ XSS is a security vulnerability where an attacker injects malicious JavaScript i
 ### What is XHR (XMLHttpRequest)?
 
 An XHR-based attack uses JavaScript (XMLHttpRequest or fetch) to send authenticated requests from the victim’s browser to another server, often leaking sensitive data like tokens. If a token is accessible via JavaScript, it can be extracted and sent to an attacker’s server.
+
+---
+
+### What is HTTP-Cookie?
+
+An HTTP cookie is a small piece of data stored by the browser and automatically sent to the server with every request to the same domain. It is created by the server using the Set-Cookie HTTP header.
+
+When a cookie has the HttpOnly flag:
+- JavaScript cannot access it
+- Protects against XSS token theft
+
+Without HttpOnly, it becomes a normal client-accessible cookie.
 
 ---
 
