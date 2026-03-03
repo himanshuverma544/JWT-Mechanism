@@ -1,5 +1,5 @@
 ### Preview
-<img src="/assets/demo.gif" width="600"/>
+<img src="public/assets/demo.gif" width="600"/>
 
 ### Why This Exists?
 
